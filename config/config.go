@@ -63,26 +63,29 @@ func NewConfigWithCustomFile(fileName string) *Config {
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		log.Fatal("Config file is wrong!")
+		log.Fatalln("Can't open configuration file!")
 	}
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&c)
 	if err != nil {
-		log.Fatal("Configuration file is wrong!")
+		log.Fatalln("Configuration file is wrong!")
 	}
 
 	if c.Markets == nil || len(c.Markets) < 1 {
-		log.Fatal("Can't find markets configuration!")
+		log.Fatalln("Can't find markets configuration!")
 	}
 
+	c.validate()
+
+	return c
+}
+
+func (c *Config) validate() {
 	for i, market := range c.Markets {
 		if !utils.StringInSlice(market.Name, marketNames) {
-			log.Println("Unknown market " + market.Name)
+			log.Println("Unknown market \"" + market.Name + "\" in configuration file.")
 			c.Markets = append(c.Markets[:i], c.Markets[i+1:]...)
 		}
 	}
-	print(c.Markets)
-
-	return c
 }
