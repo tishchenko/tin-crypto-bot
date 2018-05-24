@@ -11,7 +11,8 @@ Config file template:
     "password": ""
   },
   "markets": [
-    {}
+    {
+	}
   ]
 }
  */
@@ -19,6 +20,8 @@ Config file template:
 import (
 	"os"
 	"encoding/json"
+	"github.com/tishchenko/tin-crypto-bot/utils"
+	"log"
 )
 
 const (
@@ -38,8 +41,12 @@ type Proxy struct {
 	Password string `json:"password"`
 }
 
-type MarketConfig struct {
+var marketNames = []string{"Bitfinex", "Binance", "Cobinhood", "Huobi"}
 
+type MarketConfig struct {
+	Name   string `json:"name"`
+	Key    string `json:"key"`
+	Secret string `json:"secret"`
 }
 
 func NewConfig() *Config {
@@ -56,18 +63,26 @@ func NewConfigWithCustomFile(fileName string) *Config {
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		panic("Config file is wrong!")
+		log.Fatal("Config file is wrong!")
 	}
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&c)
 	if err != nil {
-		return c
+		log.Fatal("Configuration file is wrong!")
 	}
 
 	if c.Markets == nil || len(c.Markets) < 1 {
-		panic("Can't find markets configuration!")
+		log.Fatal("Can't find markets configuration!")
 	}
+
+	for i, market := range c.Markets {
+		if !utils.StringInSlice(market.Name, marketNames) {
+			log.Println("Unknown market " + market.Name)
+			c.Markets = append(c.Markets[:i], c.Markets[i+1:]...)
+		}
+	}
+	print(c.Markets)
 
 	return c
 }
