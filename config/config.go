@@ -12,6 +12,9 @@ Config file template:
   },
   "markets": [
     {
+		"name": "",
+		"key": "",
+		"secret": ""
 	}
   ]
 }
