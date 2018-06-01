@@ -8,6 +8,7 @@ import (
 	"net"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"context"
+	"reflect"
 )
 
 const version = "0.1.0 alpha"
@@ -15,6 +16,7 @@ const version = "0.1.0 alpha"
 type TelegramBot struct {
 	Bot    *tgbotapi.BotAPI
 	States map[int64]State
+	MesChan chan string
 }
 
 type State struct {
@@ -56,6 +58,7 @@ func NewTelegramBot(conf *config.Config) *TelegramBot {
 	}
 
 	bot.Bot.Debug = true
+	bot.MesChan = make(chan string)
 
 	log.Printf("Authorized on account %s", bot.Bot.Self.UserName)
 
@@ -63,9 +66,8 @@ func NewTelegramBot(conf *config.Config) *TelegramBot {
 }
 
 func (bot *TelegramBot) Run() {
-	m := make(chan string)
 	//go bot.poll(m)
-	go bot.sendBroadcastMessage(m)
+	go bot.sendBroadcastMessage(bot.MesChan)
 
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
@@ -112,7 +114,7 @@ func (bot *TelegramBot) sendBroadcastMessage(m chan string) {
 		message := <-m
 		for chatID, state := range bot.States {
 			bot.sendMessage(chatID, message)
-			println(chatID, ": ", state)
+			println(chatID, ": ", reflect.ValueOf(&state).String())
 		}
 
 		print("+")
