@@ -33,10 +33,12 @@ func NewCryptoBot(conf *config.Logic) *CryptoBot {
 }
 
 func (bot *CryptoBot) Run() {
-	for {
-		bot.Emit("TelBot", CryptoBotEvent{SetLimitBuyOrder})
-		time.Sleep(3333)
-	}
+	go func() {
+		for {
+			bot.Emit("TelBot", CryptoBotEvent{SetLimitBuyOrder})
+			time.Sleep(3 * time.Second)
+		}
+	}()
 }
 
 func (bot *CryptoBot) AddConsumer(e string, ch chan CryptoBotEvent) {
