@@ -4,10 +4,10 @@ import (
 	"os"
 	"log"
 	"encoding/json"
-	"github.com/satori/go.uuid"
 	"strings"
 	"github.com/tishchenko/tin-crypto-bot/utils"
 	"math"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -87,32 +87,80 @@ func (logic *Logic) validate() {
 	}
 }
 
-func (logic *Logic) validateSignal(signal Signal) {
+func (logic *Logic) validateSignal(signal Signal) bool {
+	if !logic.validateSignalMarket(signal) {
+		return false
+	}
+
+	if !logic.validateSignalPair(signal) {
+		return false
+	}
+
+	if !logic.validateSignalId(signal) {
+		return false
+	}
+
+	if !logic.validateSignalTradeCap(signal) {
+		return false
+	}
+
+	if !logic.validateSignalBuyLevels(signal) {
+		return false
+	}
+
+	if !logic.validateSignalSellLevels(signal) {
+		return false
+	}
+
+	return true
+}
+
+func (logic *Logic) validateSignalMarket(signal Signal) bool {
 	if !utils.StringInSlice(signal.Market, marketNames) {
 		log.Printf("Unknown market \"%s\"! Supported: %s.\n", signal.Market, strings.Join(marketNames, ", "))
-		return
+		return false
 	}
+	return true
+}
 
+func (logic *Logic) validateSignalPair(signal Signal) bool {
 	if len(signal.Pair) < 5 || !strings.Contains(signal.Pair, "-") {
 		log.Printf("Pair \"%s\" have wrong format! Example: BTC-USDT.\n", signal.Pair)
-		return
+		return false
 	}
+	return true
+}
 
+func (logic *Logic) validateSignalId(signal Signal) bool {
 	if signal.Id == "" {
-		signal.Id = uuid.Must(uuid.NewV4()).String()
-		// TODO Check id for unique
+		for {
+			signal.Id = uuid.Must(uuid.NewV4()).String()
+			if logic.validateSignalIdUnique(signal.Id) {
+				break
+			}
+		}
 		log.Printf("Generated new id \"%s\" for trade strategy \"%s\" \"%s\".", signal.Id, signal.Pair, signal.Market)
-	}
-	// TODO Check id for unique
 
+	}
+	return true
+}
+
+func (logic *Logic) validateSignalIdUnique(id string) bool {
+	// TODO
+	return true
+}
+
+func (logic *Logic) validateSignalTradeCap(signal Signal) bool {
 	if signal.TradeCap <= 0 {
 		log.Printf("Trade cap must be greater than zero. Signal \"%s\"!\n", signal.Id)
-		return
+		return false
 	}
+	return true
+}
 
+func (logic *Logic) validateSignalBuyLevels(signal Signal) bool {
 	var percentSum float32 = 0
 	var maxBuyPrice float32 = 0
-	var minSellPrice float32 = math.MaxFloat32
 
 	if signal.BuyLevels != nil && len(*signal.BuyLevels) > 0 {
 		for _, level := range *signal.BuyLevels {
@@ -123,8 +171,15 @@ func (logic *Logic) validateSignal(signal Signal) {
 		}
 	} else {
 		log.Printf("Must be at least one buy level for signal \"%s\"\n", signal.Id)
-		return
+		return false
 	}
+
+	return true
+}
+
+func (logic *Logic) validateSignalSellLevels(signal Signal) bool {
+	var percentSum float32 = 0
+	var minSellPrice float32 = math.MaxFloat32
 
 	if signal.SellLevels != nil && len(*signal.SellLevels) > 0 {
 		percentSum = 0
@@ -136,6 +191,8 @@ func (logic *Logic) validateSignal(signal Signal) {
 		}
 	} else {
 		log.Printf("Must be at least one sell level for signal \"%s\"\n", signal.Id)
-		return
+		return false
 	}
+
+	return true
 }
