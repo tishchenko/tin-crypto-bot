@@ -10,13 +10,12 @@ Config file template:
     "user": "",
     "password": ""
   },
-  "markets": [
-    {
-		"name": "",
+  "markets": {
+    "marketName": {
 		"key": "",
 		"secret": ""
 	}
-  ]
+  }
 }
  */
 
@@ -32,9 +31,9 @@ const (
 )
 
 type Config struct {
-	TelApiToken string         `json:"token"`
-	Proxy       *Proxy         `json:"proxy,omitempty"`
-	Markets     []MarketConfig `json:"markets"`
+	TelApiToken string                  `json:"token"`
+	Proxy       *Proxy                  `json:"proxy,omitempty"`
+	Markets     map[string]MarketConfig `json:"markets"`
 }
 
 type Proxy struct {
@@ -44,10 +43,9 @@ type Proxy struct {
 	Password string `json:"password"`
 }
 
-var marketNames = []string{"Bitfinex", "Binance", "Cobinhood", "Huobi"}
+var marketNames = []string{"bitfinex", "binance", "cobinhood", "huobi"}
 
 type MarketConfig struct {
-	Name   string `json:"name"`
 	Key    string `json:"key"`
 	Secret string `json:"secret"`
 }
@@ -85,10 +83,10 @@ func NewConfigWithCustomFile(fileName string) *Config {
 }
 
 func (c *Config) validate() {
-	for i, market := range c.Markets {
-		if !utils.StringInSlice(market.Name, marketNames) {
-			log.Println("Unknown market \"" + market.Name + "\" in configuration file.")
-			c.Markets = append(c.Markets[:i], c.Markets[i+1:]...)
+	for market, _ := range c.Markets {
+		if !utils.StringInSlice(market, marketNames) {
+			log.Println("Unknown market \"" + market + "\" in configuration file.")
+			delete(c.Markets, market)
 		}
 	}
 }

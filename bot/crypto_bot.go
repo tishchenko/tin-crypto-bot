@@ -3,10 +3,12 @@ package bot
 import (
 	"github.com/tishchenko/tin-crypto-bot/config"
 	"time"
+	"github.com/tishchenko/tin-crypto-bot/market"
 )
 
 type CryptoBot struct {
 	Logic     config.Logic
+	Markets   map[string]market.Market
 	consumers map[string][]chan CryptoBotEvent
 }
 
@@ -25,9 +27,15 @@ type CryptoBotEvent struct {
 	EventType CryptoBotEventType
 }
 
-func NewCryptoBot(conf *config.Logic) *CryptoBot {
+func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Logic) *CryptoBot {
 	bot := &CryptoBot{}
-	bot.Logic = *conf
+
+	bot.Markets = make(map[string]market.Market)
+	for marketName, marketConf := range *marketsConf {
+		bot.Markets[marketName] = *market.NewMarket(marketName, &marketConf)
+	}
+
+	bot.Logic = *logic
 
 	return bot
 }
@@ -35,8 +43,13 @@ func NewCryptoBot(conf *config.Logic) *CryptoBot {
 func (bot *CryptoBot) Run() {
 	go func() {
 		for {
+			// TODO Demo
+			for _, market := range bot.Markets {
+				market.Klines()
+			}
+
 			bot.Emit("TelBot", CryptoBotEvent{SetLimitBuyOrder})
-			time.Sleep(3 * time.Second)
+			time.Sleep(5 * time.Minute)
 		}
 	}()
 }

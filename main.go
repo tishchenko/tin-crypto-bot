@@ -13,7 +13,7 @@ func main() {
 
 	telBot := bot.NewTelegramBot(conf)
 
-	cryptoBot := bot.NewCryptoBot(logic)
+	cryptoBot := bot.NewCryptoBot(&conf.Markets, logic)
 
 	botAdapter := bot.NewBotAdapter(cryptoBot, telBot)
 	botAdapter.Run()
