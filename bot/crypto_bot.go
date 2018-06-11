@@ -21,6 +21,10 @@ const (
 	FillSellOrder       CryptoBotEventType = "Выполнен лимитный ордер на продажу"
 	FillMarketBuyOrder  CryptoBotEventType = "Выполнен рыночный ордер на покупку"
 	FillMarketSellOrder CryptoBotEventType = "Выполнен рыночный ордер на продажу"
+	PriceIsHigher       CryptoBotEventType = "Цена превысила отметку"
+	PriceIsLower        CryptoBotEventType = "Цена опустилась ниже отметки"
+	PriceJumpUp         CryptoBotEventType = "Скачёк цены вверх"
+	PriceJumpDown       CryptoBotEventType = "Скачёк цены вниз"
 )
 
 type CryptoBotEvent struct {

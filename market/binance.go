@@ -4,7 +4,7 @@ import (
 	//https://github.com/adshao/go-binance
 	"github.com/adshao/go-binance"
 	"github.com/tishchenko/tin-crypto-bot/config"
-	"fmt"
+	"log"
 )
 
 type Binance struct {
@@ -33,12 +33,15 @@ func (market *Binance) Klines() {
 		fmt.Println(k)
 	}*/
 
-	wsKlineHandler := func(event *binance.WsKlineEvent) {
-		fmt.Println(event.Kline)
+	errHandler := func(err error) {
+		log.Println(err)
 	}
-	doneC, err := binance.WsKlineServe("LTCBTC", "1m", wsKlineHandler)
+	wsKlineHandler := func(event *binance.WsKlineEvent) {
+		log.Println(event.Kline)
+	}
+	doneC, _, err := binance.WsKlineServe("LTCBTC", "1h", wsKlineHandler, errHandler)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	<-doneC
