@@ -4,6 +4,7 @@ import (
 	"github.com/tishchenko/tin-crypto-bot/config"
 	"time"
 	"github.com/tishchenko/tin-crypto-bot/market"
+	"log"
 )
 
 type CryptoBot struct {
@@ -45,15 +46,27 @@ func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Log
 }
 
 func (bot *CryptoBot) Run() {
+	klineHandler := func(kline *market.Kline) {
+		bot.Emit("TelBot", CryptoBotEvent{PriceJumpUp})
+		log.Println(*kline)
+	}
+	// TODO Demo
+	for _, market := range bot.Markets {
+		market.SetKlinesHandler(
+			market.Name,
+			"LTCBTC",
+			"1h",
+			klineHandler,
+		)
+	}
+
 	go func() {
 		for {
-			// TODO Demo
-			for _, market := range bot.Markets {
-				market.Klines()
-			}
 
+			print("-")
+			// TODO Demo
 			bot.Emit("TelBot", CryptoBotEvent{SetLimitBuyOrder})
-			time.Sleep(5 * time.Minute)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 }

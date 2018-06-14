@@ -23,26 +23,18 @@ func NewBinance(conf *config.MarketConfig) *Binance {
 	return c
 }
 
-func (market *Binance) Klines() {
-	/*klines, err := market.Client.NewKlinesService().Symbol("LTCBTC").
-		Interval("15m").Do(context.Background())
-	if err != nil {
-		return
-	}
-	for _, k := range klines {
-		fmt.Println(k)
-	}*/
-
+func (market *Binance) SetKlinesHandler(symbol string, interval string, handler binance.WsKlineHandler) {
 	errHandler := func(err error) {
 		log.Println(err)
 	}
-	wsKlineHandler := func(event *binance.WsKlineEvent) {
-		log.Println(event.Kline)
-	}
-	doneC, _, err := binance.WsKlineServe("LTCBTC", "1h", wsKlineHandler, errHandler)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	<-doneC
+
+	//doneC, _, err := binance.WsKlineServe("LTCBTC", "1h", handler, errHandler)
+	go func() {
+		doneC, _, err := binance.WsKlineServe(symbol, interval, handler, errHandler)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		<-doneC
+	}()
 }
