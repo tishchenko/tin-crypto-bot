@@ -80,10 +80,24 @@ func (logic *Logic) validate() {
 	if logic.Strategies == nil {
 		log.Fatalln("Can't find \"Strategies\" block!")
 	}
+
+	signals := []Signal{}
 	if logic.Strategies.Signals != nil {
 		for _, signal := range *logic.Strategies.Signals {
-			logic.validateSignal(signal)
+			/*var active bool
+			if signal.Active == nil {
+				active = true
+			} else {
+				active = *signal.Active
+			}
+			active = active && logic.validateSignal(signal)
+			signal.Active = &(active)*/
+
+			if logic.validateSignal(signal) {
+				signals = append(signals, signal)
+			}
 		}
+		logic.Strategies.Signals = &signals
 	}
 }
 
@@ -168,6 +182,10 @@ func (logic *Logic) validateSignalBuyLevels(signal Signal) bool {
 			if level.Price > maxBuyPrice {
 				maxBuyPrice = level.Price
 			}
+			if percentSum > 100 {
+				log.Printf("Buy levels quantity more than 100%% for signal \"%s\"\n", signal.Id)
+				return false
+			}
 		}
 	} else {
 		log.Printf("Must be at least one buy level for signal \"%s\"\n", signal.Id)
@@ -187,6 +205,10 @@ func (logic *Logic) validateSignalSellLevels(signal Signal) bool {
 			percentSum += level.Percent
 			if level.Price < minSellPrice {
 				minSellPrice = level.Price
+			}
+			if percentSum > 100 {
+				log.Printf("Sell levels quantity more than 100%% for signal \"%s\"\n", signal.Id)
+				return false
 			}
 		}
 	} else {

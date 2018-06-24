@@ -48,24 +48,9 @@ func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Log
 }
 
 func (bot *CryptoBot) Run() {
-	klineHandler := func(kline *market.Kline) {
-		bot.Emit("TelBot", CryptoBotEvent{PriceJumpUp})
-		log.Println(*kline)
-	}
-	for _, signal := range *bot.Logic.Strategies.Signals {
-		market, ok := bot.Markets[signal.Market]
-		if !ok {
-			log.Printf("Market %s for signal %s is not found.", signal.Market, signal.Id)
-			continue
-		}
-		market.Name = signal.Market
-		market.SetKlinesHandler(
-			market.Name,
-			signal.Pair,
-			"1h",
-			klineHandler,
-		)
-	}
+
+	bot.signalStrategiesProcessing(bot.Logic.Strategies.Signals)
+
 	// TODO Demo
 	/*for _, market := range bot.Markets {
 		market.SetKlinesHandler(
@@ -116,5 +101,35 @@ func (bot *CryptoBot) Emit(e string, response CryptoBotEvent) {
 				handler <- response
 			}(handler)
 		}
+	}
+}
+
+func (bot *CryptoBot) signalStrategiesProcessing(signals *[]config.Signal) {
+	for _, signal := range *signals {
+		if signal.Active != nil && !*signal.Active {
+			continue
+		}
+		market, ok := bot.Markets[signal.Market]
+		if !ok {
+			log.Printf("Market %s for signal %s is not found.", signal.Market, signal.Id)
+			continue
+		}
+		market.Name = signal.Market
+		market.SetKlinesHandler(
+			market.Name,
+			signal.Pair,
+			"1m",
+			bot.cookSignalHandler(signal),
+		)
+	}
+}
+
+func (bot *CryptoBot) cookSignalHandler(signal config.Signal) market.KlineHandler {
+	return func(kline *market.Kline) {
+		// TODO Delete this Demo
+		bot.Emit("TelBot", CryptoBotEvent{PriceJumpUp})
+
+		log.Print(signal.Id)
+		log.Println(kline.Close)
 	}
 }

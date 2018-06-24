@@ -63,7 +63,7 @@
           },
           {
             "price": 17000,
-            "percent": 10.1
+            "percent": 10
           }
         ],
         "_comment_stopLoss": "Стоплосс фиксации убытка. Цена должна быть ниже минимальной цены закупки. Процент продаваемых по стоплоссу моент не должен превышать 100%",
@@ -91,6 +91,36 @@
         ],
         "stopLoss": {
           "price": 0.08,
+          "percent": 100
+        }
+      },
+      {
+        "id": "DASH-BTC-DEMO-SIGNAL",
+        "market": "binance",
+        "pair": "DASH-BTC",
+        "tradeCap": 0.1,
+        "buyLevels": [
+          {
+            "price": 0.039,
+            "percent": 100
+          }
+        ],
+        "sellLevels": [
+          {
+            "price": 0.042,
+            "percent": 50
+          },
+          {
+            "price": 0.047,
+            "percent": 30
+          },
+          {
+            "price": 0.053,
+            "percent": 20
+          }
+        ],
+        "stopLoss": {
+          "price": 0.037,
           "percent": 100
         }
       }
