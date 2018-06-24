@@ -13,3 +13,11 @@ func NewBitfinex(conf *config.MarketConfig) *Bitfinex {
 	c.Client = bitfinex.NewClient(key, secret)*/
 	return c
 }
+
+func (market *Bitfinex) CreateOrder(symbol string, orderType OrderType, quantity float64, price float64) (string, error) {
+	return "", nil
+}
+
+func (market *Bitfinex) CancelOrder(orderId string) error {
+	return nil
+}

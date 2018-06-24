@@ -2,15 +2,16 @@ package bot
 
 import (
 	"github.com/tishchenko/tin-crypto-bot/config"
-	"time"
 	"github.com/tishchenko/tin-crypto-bot/market"
 	"log"
+	"github.com/tishchenko/tin-crypto-bot/logger"
 )
 
 type CryptoBot struct {
 	Logic     config.Logic
 	Markets   map[string]market.Market
 	consumers map[string][]chan CryptoBotEvent
+	logger    logger.CryptoLogger
 }
 
 type CryptoBotEventType string
@@ -32,7 +33,7 @@ type CryptoBotEvent struct {
 	EventType CryptoBotEventType
 }
 
-func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Logic) *CryptoBot {
+func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Logic, logger *logger.CryptoLogger) *CryptoBot {
 	bot := &CryptoBot{}
 
 	bot.Markets = make(map[string]market.Market)
@@ -41,6 +42,7 @@ func NewCryptoBot(marketsConf *map[string]config.MarketConfig, logic *config.Log
 	}
 
 	bot.Logic = *logic
+	bot.logger = *logger
 
 	return bot
 }
@@ -50,17 +52,31 @@ func (bot *CryptoBot) Run() {
 		bot.Emit("TelBot", CryptoBotEvent{PriceJumpUp})
 		log.Println(*kline)
 	}
+	for _, signal := range *bot.Logic.Strategies.Signals {
+		market, ok := bot.Markets[signal.Market]
+		if !ok {
+			log.Printf("Market %s for signal %s is not found.", signal.Market, signal.Id)
+			continue
+		}
+		market.Name = signal.Market
+		market.SetKlinesHandler(
+			market.Name,
+			signal.Pair,
+			"1h",
+			klineHandler,
+		)
+	}
 	// TODO Demo
-	for _, market := range bot.Markets {
+	/*for _, market := range bot.Markets {
 		market.SetKlinesHandler(
 			market.Name,
 			"LTCBTC",
 			"1h",
 			klineHandler,
 		)
-	}
+	}*/
 
-	go func() {
+	/*go func() {
 		for {
 
 			print("-")
@@ -68,7 +84,7 @@ func (bot *CryptoBot) Run() {
 			bot.Emit("TelBot", CryptoBotEvent{SetLimitBuyOrder})
 			time.Sleep(5 * time.Second)
 		}
-	}()
+	}()*/
 }
 
 func (bot *CryptoBot) AddConsumer(e string, ch chan CryptoBotEvent) {

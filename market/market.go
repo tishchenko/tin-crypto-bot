@@ -30,6 +30,15 @@ type Kline struct {
 
 type KlineHandler func(kline *Kline)
 
+type OrderType string
+
+const (
+	OrderTypeBuyLimit  OrderType = "BUY-LIMIT"
+	OrderTypeSellLimit OrderType = "SELL-LIMIT"
+	OrderTypeBuyMarket  OrderType = "BUY-MARKET"
+	OrderTypeSellMarket OrderType = "SELL-MARKET"
+)
+
 func NewMarket(marketName string, conf *config.MarketConfig) *Market {
 	m := &Market{}
 
@@ -52,26 +61,67 @@ func (market *Market) SetKlinesHandler(marketName string, symbol string, interva
 
 	if marketName == "binance" && market.binance != nil {
 		wsKlineHandler := func(event *binance.WsKlineEvent) {
-			handler(binanceKlineConverter(event.Kline))
+			handler(binanceKlineConv(event.Kline))
 		}
 		market.binance.SetKlinesHandler(symbol, interval, wsKlineHandler)
 	}
+	if marketName == "bitfinex" && market.bitfinex != nil {
+
+	}
+	if marketName == "cobinhood" && market.cobinhood != nil {
+
+	}
+	if marketName == "huobi" && market.huobi != nil {
+
+	}
 }
 
-func binanceKlineConverter(kline binance.WsKline) *Kline {
+func (market *Market) CreateOrder(marketName string, symbol string, orderType OrderType, quantity float64, price float64) (string, error) {
+	if marketName == "binance" && market.binance != nil {
+		return market.binance.CreateOrder(symbol, orderType, quantity, price)
+	}
+	if marketName == "bitfinex" && market.bitfinex != nil {
+		return market.bitfinex.CreateOrder(symbol, orderType, quantity, price)
+	}
+	if marketName == "cobinhood" && market.cobinhood != nil {
+		return market.cobinhood.CreateOrder(symbol, orderType, quantity, price)
+	}
+	if marketName == "huobi" && market.huobi != nil {
+		return market.huobi.CreateOrder(symbol, orderType, quantity, price)
+	}
+	return "", nil
+}
+
+func (market *Market) CancelOrder(marketName string, orderId string) error {
+	if marketName == "binance" && market.binance != nil {
+		return market.binance.CancelOrder(orderId)
+	}
+	if marketName == "bitfinex" && market.bitfinex != nil {
+		return market.bitfinex.CancelOrder(orderId)
+	}
+	if marketName == "cobinhood" && market.cobinhood != nil {
+		return market.cobinhood.CancelOrder(orderId)
+	}
+	if marketName == "huobi" && market.huobi != nil {
+		return market.huobi.CancelOrder(orderId)
+	}
+	return nil
+}
+
+func binanceKlineConv(kline binance.WsKline) *Kline {
 	k := &Kline{
-		StartTime: kline.StartTime,
-		EndTime: kline.EndTime,
-		Symbol: kline.Symbol,
-		Interval: kline.Interval,
+		StartTime:    kline.StartTime,
+		EndTime:      kline.EndTime,
+		Symbol:       kline.Symbol,
+		Interval:     kline.Interval,
 		FirstTradeID: kline.FirstTradeID,
-		LastTradeID: kline.LastTradeID,
-		Open: kline.Open,
-		Close: kline.Close,
-		High: kline.High,
-		Low: kline.Low,
-		Volume: kline.Volume,
-		IsFinal: kline.IsFinal,
+		LastTradeID:  kline.LastTradeID,
+		Open:         kline.Open,
+		Close:        kline.Close,
+		High:         kline.High,
+		Low:          kline.Low,
+		Volume:       kline.Volume,
+		IsFinal:      kline.IsFinal,
 	}
 	return k
 }

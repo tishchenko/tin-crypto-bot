@@ -5,7 +5,7 @@
     "signals": [
       {
         "_comment_id": "Уникальный идентификатор стратегии. В случае отсутствия будет сгенерирован принудительно.",
-        "id": "",
+        "id": "BTC-USDT-DEMO-SIGNAL",
         "_comment_market": "Название торговых площадок. Поддерживаются Binance, Bitfinex, Cobinhood, Huobi.",
         "market": "binance",
         "_comment_pair": "Название торговой пары, разделённые знаком -. Должны поддерживаться соответствующей биржей (market).",
@@ -70,6 +70,28 @@
         "stopLoss": {
           "price": 5999,
           "percent": 50
+        }
+      },
+      {
+        "id": "BCH-BTC-DEMO-SIGNAL",
+        "market": "binance",
+        "pair": "BCC-BTC",
+        "tradeCap": 0.1,
+        "buyLevels": [
+          {
+            "price": 0.09,
+            "percent": 100
+          }
+        ],
+        "sellLevels": [
+          {
+            "price": 0.181,
+            "percent": 100
+          }
+        ],
+        "stopLoss": {
+          "price": 0.08,
+          "percent": 100
         }
       }
     ]

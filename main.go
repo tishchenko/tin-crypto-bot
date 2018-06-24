@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/tishchenko/tin-crypto-bot/config"
 	"github.com/tishchenko/tin-crypto-bot/bot"
+	"github.com/tishchenko/tin-crypto-bot/logger"
 )
 
 func main() {
@@ -13,7 +14,8 @@ func main() {
 
 	telBot := bot.NewTelegramBot(conf)
 
-	cryptoBot := bot.NewCryptoBot(&conf.Markets, logic)
+	cryptoLogger := logger.NewCryptoLogger()
+	cryptoBot := bot.NewCryptoBot(&conf.Markets, logic, cryptoLogger)
 
 	botAdapter := bot.NewBotAdapter(cryptoBot, telBot)
 	botAdapter.Run()
