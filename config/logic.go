@@ -7,7 +7,9 @@ import (
 	"strings"
 	"github.com/tishchenko/tin-crypto-bot/utils"
 	"math"
-	"github.com/satori/go.uuid"
+	"crypto/sha1"
+	"encoding/hex"
+	"strconv"
 )
 
 const (
@@ -93,7 +95,7 @@ func (logic *Logic) validate() {
 			active = active && logic.validateSignal(signal)
 			signal.Active = &(active)*/
 
-			if logic.validateSignal(signal) {
+			if signal.validate() {
 				signals = append(signals, signal)
 			}
 		}
@@ -101,35 +103,36 @@ func (logic *Logic) validate() {
 	}
 }
 
-func (logic *Logic) validateSignal(signal Signal) bool {
-	if !logic.validateSignalMarket(signal) {
+// TODO Refactor this !
+func (signal *Signal) validate() bool {
+	if !signal.validateMarket() {
 		return false
 	}
 
-	if !logic.validateSignalPair(signal) {
+	if !signal.validatePair() {
 		return false
 	}
 
-	if !logic.validateSignalId(signal) {
+	if !signal.validateId() {
 		return false
 	}
 
-	if !logic.validateSignalTradeCap(signal) {
+	if !signal.validateTradeCap() {
 		return false
 	}
 
-	if !logic.validateSignalBuyLevels(signal) {
+	if !signal.validateBuyLevels() {
 		return false
 	}
 
-	if !logic.validateSignalSellLevels(signal) {
+	if !signal.validateSellLevels() {
 		return false
 	}
 
 	return true
 }
 
-func (logic *Logic) validateSignalMarket(signal Signal) bool {
+func (signal *Signal) validateMarket() bool {
 	if !utils.StringInSlice(signal.Market, marketNames) {
 		log.Printf("Unknown market \"%s\"! Supported: %s.\n", signal.Market, strings.Join(marketNames, ", "))
 		return false
@@ -137,7 +140,7 @@ func (logic *Logic) validateSignalMarket(signal Signal) bool {
 	return true
 }
 
-func (logic *Logic) validateSignalPair(signal Signal) bool {
+func (signal *Signal) validatePair() bool {
 	if len(signal.Pair) < 5 || !strings.Contains(signal.Pair, "-") {
 		log.Printf("Pair \"%s\" have wrong format! Example: BTC-USDT.\n", signal.Pair)
 		return false
@@ -145,11 +148,12 @@ func (logic *Logic) validateSignalPair(signal Signal) bool {
 	return true
 }
 
-func (logic *Logic) validateSignalId(signal Signal) bool {
+func (signal *Signal) validateId() bool {
 	if signal.Id == "" {
 		for {
-			signal.Id = uuid.Must(uuid.NewV4()).String()
-			if logic.validateSignalIdUnique(signal.Id) {
+			//signal.Id = uuid.Must(uuid.NewV4()).String()
+			signal.Id = signal.Hash()
+			if signal.validateIdUnique(signal.Id) {
 				break
 			}
 		}
@@ -159,12 +163,12 @@ func (logic *Logic) validateSignalId(signal Signal) bool {
 	return true
 }
 
-func (logic *Logic) validateSignalIdUnique(id string) bool {
+func (signal *Signal) validateIdUnique(id string) bool {
 	// TODO
 	return true
 }
 
-func (logic *Logic) validateSignalTradeCap(signal Signal) bool {
+func (signal *Signal) validateTradeCap() bool {
 	if signal.TradeCap <= 0 {
 		log.Printf("Trade cap must be greater than zero. Signal \"%s\"!\n", signal.Id)
 		return false
@@ -172,7 +176,7 @@ func (logic *Logic) validateSignalTradeCap(signal Signal) bool {
 	return true
 }
 
-func (logic *Logic) validateSignalBuyLevels(signal Signal) bool {
+func (signal *Signal) validateBuyLevels() bool {
 	var percentSum float32 = 0
 	var maxBuyPrice float32 = 0
 
@@ -195,7 +199,7 @@ func (logic *Logic) validateSignalBuyLevels(signal Signal) bool {
 	return true
 }
 
-func (logic *Logic) validateSignalSellLevels(signal Signal) bool {
+func (signal *Signal) validateSellLevels() bool {
 	var percentSum float32 = 0
 	var minSellPrice float32 = math.MaxFloat32
 
@@ -217,4 +221,37 @@ func (logic *Logic) validateSignalSellLevels(signal Signal) bool {
 	}
 
 	return true
+}
+
+func (signal *Signal) Hash() string {
+	s := signal.Market + signal.Pair
+
+	var level2string = func(level Level) string {
+		var level2string = func(level Level) string {
+			s := "percent:" + strconv.FormatFloat(float64(level.Percent), 'g', 1, 32) +
+				"price:" + strconv.FormatFloat(float64(level.Price), 'g', 1, 32)
+			return s
+		}
+		s := level2string(level)
+		if level.StopLoss != nil {
+			s += "stoploss:" + level2string(*level.StopLoss)
+		}
+		return s
+	}
+
+	s += "buyLevels:"
+	for _, level := range *signal.BuyLevels {
+		s += level2string(level)
+	}
+	s += "sellLevels:"
+	for _, level := range *signal.SellLevels {
+		s += level2string(level)
+	}
+	if signal.StopLoss != nil {
+		s += "stoploss:" + level2string(*signal.StopLoss)
+	}
+
+	h := sha1.New()
+	h.Write([]byte(s))
+	return hex.EncodeToString(h.Sum(nil))
 }

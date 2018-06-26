@@ -130,6 +130,7 @@ func (bot *CryptoBot) cookSignalHandler(signal config.Signal) market.KlineHandle
 		bot.Emit("TelBot", CryptoBotEvent{PriceJumpUp})
 
 		log.Print(signal.Id)
+		log.Print(signal.Hash())
 		log.Println(kline.Close)
 	}
 }
